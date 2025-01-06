@@ -44,3 +44,96 @@ recombines these operations as defined by a target machine to create new, higher
 A simple example is the following program, which allocates one qubit in the 
 |0⟩
  state, then applies a Hadamard operation H to it and measures the result in the PauliZ basis.
+
+
+
+
+
+# Optimization Solver: A Qiskit Function by Q-CTRL Fire Opal
+
+### Overview
+
+With the Fire Opal Optimization Solver, you can solve utility-scale optimization problems on quantum hardware without requiring quantum expertise. Simply input the high-level problem definition, and the Solver takes care of the rest. The entire workflow is noise-aware and leverages Fire Opal's Performance Management under the hood. The Solver consistently delivers accurate solutions to classically challenging problems, even at full-device scale on the largest IBM® QPUs.
+
+The Solver is flexible and can be used to solve combinatorial optimization problems defined as objective functions or arbitrary graphs. Problems do not have to be mapped to device topology. Both unconstrained and constrained problems are solvable, given that constraints can be formulated as penalty terms. The examples included in this guide demonstrate how to solve an unconstrained and a constrained utility-scale optimization problem using different Solver input types. The first example involves a Max-Cut problem defined on a 156-node, 3-Regular graph, while the second example tackles a 50-node Minimum Vertex Cover problem defined by a cost function.
+
+### Function description
+
+The Solver fully optimizes and automates the entire algorithm, from error suppression at the hardware level to efficient problem mapping and closed-loop classical optimization. Behind the scenes, the Solver's pipeline reduces errors at every stage, enabling the enhanced performance required to meaningfully scale. The underlying workflow is inspired by the Quantum Approximate Optimization Algorithm (QAOA), which is a hybrid quantum-classical algorithm. For a detailed summary of the full Optimization Solver workflow, refer to the published manuscript.
+
+![image](https://github.com/user-attachments/assets/1da79252-6e3a-4b1c-9b02-e63cdafc75d8)
+
+
+### To solve a generic problem with the Optimization Solver:
+
+- Define your problem as an objective function or a graph.
+- Connect to the function through the Qiskit Functions Catalog.
+- Run the problem with the Solver and retrieve results.
+
+
+### Get started
+
+```qs
+from qiskit_ibm_catalog import QiskitFunctionsCatalog
+ 
+# If you have not previously saved your credentials, follow instructions at
+# https://docs.quantum.ibm.com/guides/setup-channel#iqp
+# to authenticate with your API token.
+catalog = QiskitFunctionsCatalog()
+ 
+# Access Function
+solver = catalog.load("q-ctrl/optimization-solver")
+```
+
+### Example: Unconstrained optimization
+
+Run the maximum cut (Max-Cut) problem. The following example demonstrates the Solver's capabilities on a 156-node, 3-regular unweighted graph Max-Cut problem, but you can also solve weighted graph problems.
+
+In addition to qiskit-ibm-catalog, you will also use the following packages to run this example: networkx and numpy. You can install these packages by uncommenting the following cell if you are running this example in a notebook using the IPython kernel.
+
+```
+# %pip install networkx numpy
+```
+
+#### Define the problem
+```qs
+import networkx as nx
+import numpy as np
+ 
+# Generate a random graph with 156 nodes
+maxcut_graph = nx.random_regular_graph(d=3, n=156, seed=8)
+```
+```qs
+# Optionally, visualize the graph
+nx.draw(maxcut_graph, nx.kamada_kawai_layout(maxcut_graph), node_size=100)
+```
+
+![image](https://github.com/user-attachments/assets/53c7383a-bbbe-433c-a57d-0b9e6c4ef5c2)
+
+The Solver accepts a string as the problem definition input.
+
+```qs
+# Convert graph to string
+problem_as_str = nx.readwrite.json_graph.adjacency_data(maxcut_graph)
+```
+
+#### Run the problem
+
+```qs
+# Solve the problem
+maxcut_job = solver.run(
+    problem=problem_as_str,
+    problem_type="maxcut",
+    instance=instance,  # E.g. "ibm-q/open/main"
+    backend_name=backend_name,  # E.g. "ibm_kyiv"
+)
+```
+```qs
+Check your Qiskit Function workload's status or return results as follows:
+```
+```qs
+# Get job status
+print(maxcut_job.status())
+```
+
+
